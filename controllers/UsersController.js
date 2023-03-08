@@ -1,7 +1,7 @@
 const sha1 = require('sha1');
-import { uuid } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import redisClient from '../utils/redis';
-
+import AuthController from './AuthController';
 import dbClient from '../utils/db';
 
 
@@ -25,7 +25,7 @@ class UsersController {
 
         const hashedPw = sha1(password);
         const user = {
-            id : uuid.v4(),
+            id : uuidv4(),
             email,
             password: hashedPw,
         };
@@ -40,9 +40,9 @@ class UsersController {
     static async getUser(req, res) {
         const token = req.header('X-token');
 
-        const UserId = await redisClient.get(id);
+        const userId = await redisClient.get(key);
         if (!userId) {
-            return status(401).json({ error: "Unauthorized" });
+            return res.status(401).json({ error: "Unauthorized" });
         }
 
         try {

@@ -18,7 +18,7 @@ class AuthController {
         const credentials = Buffer.from(base64Credentials, "base64").toString('ascii');
         const [ id, email, password ] = credentials.split(":");
 
-        const user = await dbClient.db.collection('users').find({ email: email,  password: password });
+        const user = await dbClient.db.collection('users').find({ email: email});
         if (!user) {
             res.status(401).send({ error: "Unauthorized"});
             return;
@@ -26,12 +26,18 @@ class AuthController {
 
         const token = uuidv4();
         const key =`auth_${token}`;
-        redisClient.setex(key, 84600, user.id);
+        redisClient.set(key, id, 'EX', 84600, (err) => {
+        if (err) {
+        console.error(err);
+        res.status(500).json({error: "Internal server Error"});
+            return;
+        }
 
         res.status(200).send({ token });
+        });
     }
 
-    static async getDisconnect(req, res) {
+    async getDisconnect(req, res) {
         const token = req.headers["x-token"];
         if (!token) {
             res.status(401).json({ error: "Unauthorized"});
@@ -44,11 +50,9 @@ class AuthController {
             res.status(401).json({ error: "Unauthorized" });
             return;
         }
-
         redisClient.del(key);
         res.status(204);
-    }
+        }
 }
-
 module.exports = AuthController;
 
