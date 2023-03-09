@@ -2,7 +2,7 @@ const sha1 = require('sha1');
 import { v4 as uuidv4 } from 'uuid';
 import redisClient from '../utils/redis';
 import AuthController from './AuthController';
-import dbClient from '../utils/db';
+import { dbClient, ObjectID} from '../utils/db';
 
 
 class UsersController {
@@ -17,20 +17,21 @@ class UsersController {
         }
         
 
-        const userExists = await dbClient.db.collection('users').findOne({ email: email });
+        const userExists = await dbClient.db.users.findOne({ email: email });
 
         if (userExists) {
             return res.status(400).json({error: "Already exist"});
         }
 
         const hashedPw = sha1(password);
+        const id = new ObjectID();
         const user = {
-            id : uuidv4(),
             email,
             password: hashedPw,
+            _id : id,
         };
 
-        await dbClient.db.collection('users').insertOne(user);
+        await dbClient.db.users.insertOne(user);
             return res.status(200).json({
                 id: user.id,
                 email: user.email,

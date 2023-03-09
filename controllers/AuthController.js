@@ -16,7 +16,7 @@ class AuthController {
 
         const base64Credentials = authHeader.slice("Basic ".length);
         const credentials = Buffer.from(base64Credentials, "base64").toString('ascii');
-        const [ id, email, password ] = credentials.split(":");
+        const [ email, password, id ] = credentials.split(":");
 
         const user = await dbClient.db.collection('users').find({ email: email});
         if (!user) {
@@ -26,7 +26,7 @@ class AuthController {
 
         const token = uuidv4();
         const key =`auth_${token}`;
-        redisClient.set(key, id, 'EX', 84600, (err) => {
+        redisClient.set(key, user._id, 'EX', 84600, (err) => {
         if (err) {
         console.error(err);
         res.status(500).json({error: "Internal server Error"});
